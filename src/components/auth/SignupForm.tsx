@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import GoogleSignInButton from "./GoogleSignInButton";
 import Link from "next/link";
 
 const SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
@@ -181,6 +182,14 @@ export default function SignupForm() {
           {loading ? "Creating account..." : "Sign up"}
         </button>
       </form>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-zinc-700" />
+        <span className="text-zinc-500 text-xs">or</span>
+        <div className="flex-1 h-px bg-zinc-700" />
+      </div>
+
+      <GoogleSignInButton label="Sign up with Google" />
 
       <p className="text-zinc-400 text-sm text-center">
         Already have an account?{" "}

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import GoogleSignInButton from "./GoogleSignInButton";
 import Link from "next/link";
 
 export default function LoginForm() {
@@ -88,6 +89,14 @@ export default function LoginForm() {
           {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
+
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-zinc-700" />
+        <span className="text-zinc-500 text-xs">or</span>
+        <div className="flex-1 h-px bg-zinc-700" />
+      </div>
+
+      <GoogleSignInButton label="Continue with Google" />
 
       <p className="text-zinc-400 text-sm text-center">
         Don't have an account?{" "}
