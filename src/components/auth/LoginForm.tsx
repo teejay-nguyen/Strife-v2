@@ -107,26 +107,29 @@ export default function LoginForm() {
         <GoogleSignInButton label="Continue with Google" />
       </div>
 
-      <p className="animate-fade-slide-up delay-700 text-zinc-500 dark:text-zinc-400 text-sm text-center">
-        Don't have an account?{" "}
-        <Link
-          href="/signup"
-          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
+      <div className="flex flex-col gap-2">
+        <p className="animate-fade-slide-up delay-700 text-zinc-500 dark:text-zinc-400 text-sm text-center">
+          Don't have an account?{" "}
+          <Link
+            href="/signup"
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
+          >
+            Sign up
+          </Link>
+        </p>
+
+        <p
+          className="animate-fade-slide-up text-zinc-500 dark:text-zinc-400 text-sm text-center"
+          style={{ animationDelay: "800ms" }}
         >
-          Sign up
-        </Link>
-      </p>
-      <p
-        className="animate-fade-slide-up text-zinc-500 dark:text-zinc-400 text-sm text-center"
-        style={{ animationDelay: "800ms" }}
-      >
-        <Link
-          href="/forgot-password"
-          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-        >
-          Forgot your password?
-        </Link>
-      </p>
+          <Link
+            href="/forgot-password"
+            className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
+          >
+            Forgot your password?
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
