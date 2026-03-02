@@ -6,7 +6,6 @@ export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch - only render after mount
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
 
@@ -15,11 +14,10 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-zinc-800 dark:bg-zinc-700 hover:bg-zinc-700 dark:hover:bg-zinc-600 border border-zinc-700 dark:border-zinc-600 text-zinc-300 transition-colors"
+      className="fixed top-4 right-4 z-50 p-2 rounded-lg bg-white/80 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700/50 text-zinc-600 dark:text-zinc-300 backdrop-blur-sm shadow-lg shadow-black/10 dark:shadow-black/30 transition-colors"
       aria-label="Toggle theme"
     >
       {isDark ? (
-        // Sun icon
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-5 h-5"
@@ -35,7 +33,6 @@ export default function ThemeToggle() {
           />
         </svg>
       ) : (
-        // Moon icon
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-5 h-5"

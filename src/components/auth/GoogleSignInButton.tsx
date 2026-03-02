@@ -21,7 +21,7 @@ export default function GoogleSignInButton({
     <button
       onClick={handleGoogleSignIn}
       type="button"
-      className="w-full flex items-center justify-center gap-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
+      className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
     >
       <GoogleIcon />
       {label}
