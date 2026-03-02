@@ -1,3 +1,4 @@
+// src/proxy.ts
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -24,24 +25,42 @@ export async function proxy(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const path = request.nextUrl.pathname;
 
-  // Redirect unauthenticated users away from protected routes
-  if (!user && request.nextUrl.pathname.startsWith("/messages")) {
+  if (
+    !user &&
+    (path.startsWith("/messages") || path.startsWith("/onboarding"))
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect authenticated users away from auth pages
-  if (
-    user &&
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/signup")
-  ) {
-    return NextResponse.redirect(new URL("/messages", request.url));
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    const hasUsername = !!profile?.username;
+
+    if (!hasUsername && path.startsWith("/messages")) {
+      return NextResponse.redirect(new URL("/onboarding", request.url));
+    }
+
+    if (hasUsername && path.startsWith("/onboarding")) {
+      return NextResponse.redirect(new URL("/messages", request.url));
+    }
+
+    if (path === "/login" || path === "/signup") {
+      return NextResponse.redirect(
+        new URL(hasUsername ? "/messages" : "/onboarding", request.url),
+      );
+    }
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/messages/:path*", "/login", "/signup"],
+  matcher: ["/messages/:path*", "/onboarding", "/login", "/signup"],
 };
