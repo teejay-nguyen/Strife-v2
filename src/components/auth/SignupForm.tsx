@@ -67,19 +67,19 @@ export default function SignupForm() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-sm">
-      <div>
+      <div className="animate-fade-slide-up delay-100">
         <h1 className="text-3xl font-bold text-white">Create an account</h1>
         <p className="text-zinc-400 mt-1 text-sm">Sign up to get started</p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
+        <div className="animate-fade-slide-up bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSignup} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-200 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-300"
             htmlFor="username"
@@ -97,7 +97,7 @@ export default function SignupForm() {
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-300 flex flex-col gap-1.5">
           <label className="text-sm font-medium text-zinc-300" htmlFor="email">
             Email
           </label>
@@ -112,7 +112,7 @@ export default function SignupForm() {
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-400 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-300"
             htmlFor="password"
@@ -137,7 +137,6 @@ export default function SignupForm() {
               </span>
             )}
           </div>
-
           {showRequirements && (
             <ul className="flex flex-col gap-1 mt-1">
               {requirements.map((req) => {
@@ -156,7 +155,7 @@ export default function SignupForm() {
           )}
         </div>
 
-        <div className="flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-500 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-300"
             htmlFor="confirmPassword"
@@ -174,24 +173,34 @@ export default function SignupForm() {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors mt-1"
-        >
-          {loading ? "Creating account..." : "Sign up"}
-        </button>
+        <div className="animate-fade-slide-up delay-600">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors"
+          >
+            {loading ? "Creating account..." : "Sign up"}
+          </button>
+        </div>
       </form>
 
-      <div className="flex items-center gap-3">
+      <div className="animate-fade-slide-up delay-700 flex items-center gap-3">
         <div className="flex-1 h-px bg-zinc-700" />
         <span className="text-zinc-500 text-xs">or</span>
         <div className="flex-1 h-px bg-zinc-700" />
       </div>
 
-      <GoogleSignInButton label="Sign up with Google" />
+      <div
+        className="animate-fade-slide-up"
+        style={{ animationDelay: "800ms" }}
+      >
+        <GoogleSignInButton label="Sign up with Google" />
+      </div>
 
-      <p className="text-zinc-400 text-sm text-center">
+      <p
+        className="animate-fade-slide-up text-zinc-400 text-sm text-center"
+        style={{ animationDelay: "900ms" }}
+      >
         Already have an account?{" "}
         <Link
           href="/login"
