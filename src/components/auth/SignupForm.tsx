@@ -68,12 +68,16 @@ export default function SignupForm() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-sm">
       <div className="animate-fade-slide-up delay-100">
-        <h1 className="text-3xl font-bold text-white">Create an account</h1>
-        <p className="text-zinc-400 mt-1 text-sm">Sign up to get started</p>
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+          Create an account
+        </h1>
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
+          Sign up to get started
+        </p>
       </div>
 
       {error && (
-        <div className="animate-fade-slide-up bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
+        <div className="animate-fade-slide-up bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-sm px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -81,7 +85,7 @@ export default function SignupForm() {
       <form onSubmit={handleSignup} className="flex flex-col gap-4">
         <div className="animate-fade-slide-up delay-200 flex flex-col gap-1.5">
           <label
-            className="text-sm font-medium text-zinc-300"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="username"
           >
             Username
@@ -93,12 +97,15 @@ export default function SignupForm() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            className="bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
         <div className="animate-fade-slide-up delay-300 flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-zinc-300" htmlFor="email">
+          <label
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            htmlFor="email"
+          >
             Email
           </label>
           <input
@@ -108,13 +115,13 @@ export default function SignupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
         <div className="animate-fade-slide-up delay-400 flex flex-col gap-1.5">
           <label
-            className="text-sm font-medium text-zinc-300"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="password"
           >
             Password
@@ -129,10 +136,10 @@ export default function SignupForm() {
               onFocus={() => setPasswordFocused(true)}
               onBlur={() => setPasswordFocused(false)}
               required
-              className="w-full bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
             {passwordValid && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-base">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 dark:text-green-400 text-base">
                 ✓
               </span>
             )}
@@ -144,7 +151,7 @@ export default function SignupForm() {
                 return (
                   <li
                     key={req.label}
-                    className={`flex items-center gap-2 text-xs ${met ? "text-green-400" : "text-zinc-500"}`}
+                    className={`flex items-center gap-2 text-xs ${met ? "text-green-500 dark:text-green-400" : "text-zinc-400 dark:text-zinc-500"}`}
                   >
                     <span>{met ? "✓" : "○"}</span>
                     {req.label}
@@ -157,7 +164,7 @@ export default function SignupForm() {
 
         <div className="animate-fade-slide-up delay-500 flex flex-col gap-1.5">
           <label
-            className="text-sm font-medium text-zinc-300"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="confirmPassword"
           >
             Confirm Password
@@ -169,7 +176,7 @@ export default function SignupForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
@@ -185,9 +192,9 @@ export default function SignupForm() {
       </form>
 
       <div className="animate-fade-slide-up delay-700 flex items-center gap-3">
-        <div className="flex-1 h-px bg-zinc-700" />
-        <span className="text-zinc-500 text-xs">or</span>
-        <div className="flex-1 h-px bg-zinc-700" />
+        <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
+        <span className="text-zinc-400 dark:text-zinc-500 text-xs">or</span>
+        <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
       </div>
 
       <div
@@ -198,13 +205,13 @@ export default function SignupForm() {
       </div>
 
       <p
-        className="animate-fade-slide-up text-zinc-400 text-sm text-center"
+        className="animate-fade-slide-up text-zinc-500 dark:text-zinc-400 text-sm text-center"
         style={{ animationDelay: "900ms" }}
       >
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-indigo-400 hover:text-indigo-300 font-medium"
+          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
         >
           Sign in
         </Link>

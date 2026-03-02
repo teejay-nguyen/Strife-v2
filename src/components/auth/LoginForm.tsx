@@ -35,21 +35,26 @@ export default function LoginForm() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-sm">
       <div className="animate-fade-slide-up delay-100">
-        <h1 className="text-3xl font-bold text-white">Welcome back</h1>
-        <p className="text-zinc-400 mt-1 text-sm">
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
+          Welcome back
+        </h1>
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
           Sign in to your account to continue
         </p>
       </div>
 
       {error && (
-        <div className="animate-fade-slide-up bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3 rounded-lg">
+        <div className="animate-fade-slide-up bg-red-500/10 border border-red-500/30 text-red-500 dark:text-red-400 text-sm px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
 
       <form onSubmit={handleLogin} className="flex flex-col gap-4">
         <div className="animate-fade-slide-up delay-200 flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-zinc-300" htmlFor="email">
+          <label
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            htmlFor="email"
+          >
             Email
           </label>
           <input
@@ -59,13 +64,13 @@ export default function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
         <div className="animate-fade-slide-up delay-300 flex flex-col gap-1.5">
           <label
-            className="text-sm font-medium text-zinc-300"
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="password"
           >
             Password
@@ -77,7 +82,7 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           />
         </div>
 
@@ -93,20 +98,20 @@ export default function LoginForm() {
       </form>
 
       <div className="animate-fade-slide-up delay-500 flex items-center gap-3">
-        <div className="flex-1 h-px bg-zinc-700" />
-        <span className="text-zinc-500 text-xs">or</span>
-        <div className="flex-1 h-px bg-zinc-700" />
+        <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
+        <span className="text-zinc-400 dark:text-zinc-500 text-xs">or</span>
+        <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
       </div>
 
       <div className="animate-fade-slide-up delay-600">
         <GoogleSignInButton label="Continue with Google" />
       </div>
 
-      <p className="animate-fade-slide-up delay-700 text-zinc-400 text-sm text-center">
+      <p className="animate-fade-slide-up delay-700 text-zinc-500 dark:text-zinc-400 text-sm text-center">
         Don't have an account?{" "}
         <Link
           href="/signup"
-          className="text-indigo-400 hover:text-indigo-300 font-medium"
+          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
         >
           Sign up
         </Link>
