@@ -37,10 +37,10 @@ export default function LoginForm() {
     <div className="flex flex-col gap-6 w-full max-w-sm">
       <div className="animate-fade-slide-up delay-100">
         <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-          Welcome back
+          Welcome back!
         </h1>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm">
-          Sign in to your account to continue
+          Sign in to continue to Strife
         </p>
       </div>
 
