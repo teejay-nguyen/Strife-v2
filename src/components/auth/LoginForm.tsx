@@ -3,13 +3,16 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import GoogleSignInButton from "./GoogleSignInButton";
+import PasswordToggleButton from "./PasswordToggleButton";
+import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import Link from "next/link";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const passwordVis = usePasswordVisibility();
   const router = useRouter();
   const supabase = createClient();
 
@@ -17,12 +20,10 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
     if (error) {
       setError(error.message);
       setLoading(false);
@@ -75,15 +76,21 @@ export default function LoginForm() {
           >
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={passwordVis.visible ? "text" : "password"}
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <PasswordToggleButton
+              visible={passwordVis.visible}
+              onToggle={passwordVis.toggle}
+            />
+          </div>
         </div>
 
         <div className="animate-fade-slide-up delay-400">
@@ -117,7 +124,6 @@ export default function LoginForm() {
             Sign up
           </Link>
         </p>
-
         <p
           className="animate-fade-slide-up text-zinc-500 dark:text-zinc-400 text-sm text-center"
           style={{ animationDelay: "800ms" }}

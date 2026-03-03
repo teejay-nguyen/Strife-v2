@@ -3,6 +3,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import GoogleSignInButton from "./GoogleSignInButton";
+import PasswordToggleButton from "./PasswordToggleButton";
+import { usePasswordVisibility } from "@/hooks/usePasswordVisibility";
 import Link from "next/link";
 
 const SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
@@ -12,7 +14,7 @@ const requirements = [
   { label: "One uppercase letter", test: (p: string) => /[A-Z]/.test(p) },
   { label: "One lowercase letter", test: (p: string) => /[a-z]/.test(p) },
   {
-    label: `One special character (!@#$%^&*()_+-=[]{}|;:,.<>?)`,
+    label: `One special character (${SPECIAL_CHARS})`,
     test: (p: string) => /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(p),
   },
 ];
@@ -27,6 +29,8 @@ export default function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
+  const passwordVis = usePasswordVisibility();
+  const confirmPasswordVis = usePasswordVisibility();
   const router = useRouter();
   const supabase = createClient();
 
@@ -129,20 +133,19 @@ export default function SignupForm() {
           <div className="relative">
             <input
               id="password"
-              type="password"
+              type={passwordVis.visible ? "text" : "password"}
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setPasswordFocused(true)}
               onBlur={() => setPasswordFocused(false)}
               required
-              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
-            {passwordValid && (
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 dark:text-green-400 text-base">
-                ✓
-              </span>
-            )}
+            <PasswordToggleButton
+              visible={passwordVis.visible}
+              onToggle={passwordVis.toggle}
+            />
           </div>
           {showRequirements && (
             <ul className="flex flex-col gap-1 mt-1">
@@ -169,15 +172,21 @@ export default function SignupForm() {
           >
             Confirm Password
           </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
+          <div className="relative">
+            <input
+              id="confirmPassword"
+              type={confirmPasswordVis.visible ? "text" : "password"}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+            <PasswordToggleButton
+              visible={confirmPasswordVis.visible}
+              onToggle={confirmPasswordVis.toggle}
+            />
+          </div>
         </div>
 
         <div className="animate-fade-slide-up delay-600">
