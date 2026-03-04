@@ -88,15 +88,20 @@ export default function SignupForm() {
     }
 
     // Mark invite code as used
-    if (data.user) {
-      await supabase
+    const userId = data.user?.id;
+
+    if (userId) {
+      const { error: updateCodeError } = await supabase
         .from("invite_codes")
         .update({
-          used_by: data.user.id,
+          used_by: userId,
           used_at: new Date().toISOString(),
           is_active: false,
         })
         .eq("code", inviteCode.trim().toUpperCase());
+      if (updateCodeError) {
+        console.error("Failed to update invite code:", updateCodeError.message);
+      }
     }
 
     router.push("/messages");
