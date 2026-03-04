@@ -1,9 +1,9 @@
-// src/app/(app)/messages/page.tsx
+// src/app/(app)/dashboard/page.tsx
 "use client";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-export default function MessagesPage() {
+export default function dashboardPage() {
   const router = useRouter();
   const supabase = createClient();
 

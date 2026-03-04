@@ -47,5 +47,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${origin}/messages`);
+  return NextResponse.redirect(`${origin}/dashboard`);
 }

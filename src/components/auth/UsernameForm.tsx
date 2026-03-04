@@ -47,7 +47,7 @@ export default function UsernameForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/messages");
+      router.push("/dashboard");
       router.refresh();
     }
   };

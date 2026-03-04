@@ -104,7 +104,7 @@ export default function SignupForm() {
       }
     }
 
-    router.push("/messages");
+    router.push("/dashboard");
     router.refresh();
   };
 

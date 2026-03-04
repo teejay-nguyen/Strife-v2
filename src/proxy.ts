@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
 
   if (
     !user &&
-    (path.startsWith("/messages") || path.startsWith("/onboarding"))
+    (path.startsWith("/dashboard") || path.startsWith("/onboarding"))
   ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
@@ -43,17 +43,17 @@ export async function proxy(request: NextRequest) {
 
     const hasUsername = !!profile?.username;
 
-    if (!hasUsername && path.startsWith("/messages")) {
+    if (!hasUsername && path.startsWith("/dashboard")) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
     }
 
     if (hasUsername && path.startsWith("/onboarding")) {
-      return NextResponse.redirect(new URL("/messages", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
     if (path === "/login" || path === "/signup") {
       return NextResponse.redirect(
-        new URL(hasUsername ? "/messages" : "/onboarding", request.url),
+        new URL(hasUsername ? "/dashboard" : "/onboarding", request.url),
       );
     }
   }
@@ -62,5 +62,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/messages/:path*", "/onboarding", "/login", "/signup"],
+  matcher: ["/dashboard/:path*", "/onboarding", "/login", "/signup"],
 };
