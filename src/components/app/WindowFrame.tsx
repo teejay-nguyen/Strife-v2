@@ -1,13 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Rnd } from "react-rnd";
+import type { DraggableEvent } from "react-draggable";
 import {
   useWindowStore,
   type AppWindow,
   type SnapPosition,
 } from "@/stores/windowStore";
 
-const SNAP_THRESHOLD = 40;
+const SNAP_THRESHOLD = 80;
 
 interface Props {
   window: AppWindow;
@@ -22,41 +23,78 @@ export default function WindowFrame({ window: win, children }: Props) {
     updatePosition,
     updateSize,
     snapWindow,
+    clearSnap,
   } = useWindowStore();
   const [snapPreview, setSnapPreview] = useState<SnapPosition>(null);
+  const [rndKey, setRndKey] = useState(0);
+  const isDragging = useRef(false);
+  const windowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isDragging.current) {
+      setRndKey((k) => k + 1);
+    }
+  }, [win.size.width, win.size.height, win.snapPosition]);
 
   if (!win.isOpen || win.isMinimized) return null;
 
-  const handleDrag = (_: unknown, d: { x: number; y: number }) => {
+  const handleTitleBarMouseDown = (e: React.MouseEvent) => {
+    focusWindow(win.id);
+
+    if (win.snapPosition && win.preSnapSize) {
+      const bounds = windowRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+
+      const cursorRatioX = (e.clientX - bounds.left) / bounds.width;
+      const newWidth = win.preSnapSize.width;
+      const newX = e.clientX - cursorRatioX * newWidth;
+      const newY = e.clientY - (e.clientY - bounds.top);
+
+      updateSize(win.id, { width: newWidth, height: win.preSnapSize.height });
+      updatePosition(win.id, { x: newX, y: newY });
+      clearSnap(win.id);
+    }
+  };
+
+  const handleDragStart = () => {
+    isDragging.current = true;
+  };
+
+  const handleDrag = (e: DraggableEvent, _d: { x: number; y: number }) => {
     const workspace = document.getElementById("workspace");
     if (!workspace) return;
     const { offsetWidth: W, offsetHeight: H } = workspace;
-    const { x, y } = d;
+    const workspaceBounds = workspace.getBoundingClientRect();
+
+    const cursorX = (e as MouseEvent).clientX - workspaceBounds.left;
+    const cursorY = (e as MouseEvent).clientY - workspaceBounds.top;
 
     let snap: SnapPosition = null;
-    if (x <= SNAP_THRESHOLD && y <= SNAP_THRESHOLD) snap = "top-left";
-    else if (x >= W - win.size.width - SNAP_THRESHOLD && y <= SNAP_THRESHOLD)
+    if (cursorX <= SNAP_THRESHOLD && cursorY <= SNAP_THRESHOLD)
+      snap = "top-left";
+    else if (cursorX >= W - SNAP_THRESHOLD && cursorY <= SNAP_THRESHOLD)
       snap = "top-right";
-    else if (x <= SNAP_THRESHOLD && y >= H - win.size.height - SNAP_THRESHOLD)
+    else if (cursorX <= SNAP_THRESHOLD && cursorY >= H - SNAP_THRESHOLD)
       snap = "bottom-left";
-    else if (
-      x >= W - win.size.width - SNAP_THRESHOLD &&
-      y >= H - win.size.height - SNAP_THRESHOLD
-    )
+    else if (cursorX >= W - SNAP_THRESHOLD && cursorY >= H - SNAP_THRESHOLD)
       snap = "bottom-right";
-    else if (x <= SNAP_THRESHOLD) snap = "left-third";
-    else if (x >= W - win.size.width - SNAP_THRESHOLD) snap = "right-third";
-    else if (y <= SNAP_THRESHOLD) snap = "center-third";
+    else if (cursorX <= SNAP_THRESHOLD) snap = "left-third";
+    else if (cursorX >= W - SNAP_THRESHOLD) snap = "right-third";
+    else if (cursorY <= SNAP_THRESHOLD) snap = "center-third";
 
     setSnapPreview(snap);
   };
 
-  const handleDragStop = (_: unknown, d: { x: number; y: number }) => {
+  const handleDragStop = (_e: DraggableEvent, d: { x: number; y: number }) => {
+    isDragging.current = false;
+
     if (snapPreview) {
       snapWindow(win.id, snapPreview);
     } else {
       updatePosition(win.id, { x: d.x, y: d.y });
+      setRndKey((k) => k + 1);
     }
+
     setSnapPreview(null);
   };
 
@@ -65,6 +103,7 @@ export default function WindowFrame({ window: win, children }: Props) {
       {snapPreview && <SnapOverlay snap={snapPreview} />}
 
       <Rnd
+        key={rndKey}
         position={win.position}
         size={{
           width: win.size.width,
@@ -73,10 +112,9 @@ export default function WindowFrame({ window: win, children }: Props) {
         minWidth={240}
         minHeight={win.isCollapsed ? 42 : 200}
         enableResizing={!win.isCollapsed}
-        bounds="parent"
         style={{ zIndex: win.zIndex }}
         dragHandleClassName="window-drag-handle"
-        onMouseDown={() => focusWindow(win.id)}
+        onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragStop={handleDragStop}
         onResizeStop={(_e, _dir, _ref, _delta, position) => {
@@ -86,28 +124,30 @@ export default function WindowFrame({ window: win, children }: Props) {
           });
           updatePosition(win.id, position);
           setSnapPreview(null);
+          setRndKey((k) => k + 1);
         }}
         className="absolute"
       >
-        <div className="flex flex-col w-full h-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl shadow-black/20 overflow-hidden">
+        <div
+          ref={windowRef}
+          className="flex flex-col w-full h-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl shadow-black/20 overflow-hidden"
+        >
           {/* Title bar */}
-          <div className="window-drag-handle flex items-center justify-between px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 cursor-grab active:cursor-grabbing select-none shrink-0">
+          <div
+            className="window-drag-handle flex items-center justify-between px-4 py-2.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700 cursor-grab active:cursor-grabbing select-none shrink-0"
+            onMouseDown={handleTitleBarMouseDown}
+          >
             <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {win.title}
             </span>
-
             <div className="flex items-center gap-1.5">
               <SnapMenu windowId={win.id} />
-
-              {/* Yellow — collapse/expand */}
               <button
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => collapseWindow(win.id)}
                 className="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500 transition-colors"
                 title={win.isCollapsed ? "Expand" : "Collapse"}
               />
-
-              {/* Red — close */}
               <button
                 onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => closeWindow(win.id)}
@@ -117,7 +157,7 @@ export default function WindowFrame({ window: win, children }: Props) {
             </div>
           </div>
 
-          {/* Content — hidden when collapsed */}
+          {/* Content */}
           <div
             className={`flex-1 overflow-auto transition-all duration-300 ease-out ${
               win.isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -159,7 +199,6 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
   const { snapWindow } = useWindowStore();
 
   const layouts: { label: string; snap: SnapPosition; grid: string }[] = [
-    // Full height thirds
     {
       label: "Left third",
       snap: "left-third",
@@ -175,7 +214,6 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
       snap: "right-third",
       grid: "col-start-3 row-start-1 row-span-2",
     },
-    // Top row
     { label: "Top left", snap: "top-left", grid: "col-start-1 row-start-1" },
     {
       label: "Top center",
@@ -183,7 +221,6 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
       grid: "col-start-2 row-start-1",
     },
     { label: "Top right", snap: "top-right", grid: "col-start-3 row-start-1" },
-    // Bottom row
     {
       label: "Bottom left",
       snap: "bottom-left",
@@ -199,7 +236,6 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
       snap: "bottom-right",
       grid: "col-start-3 row-start-2",
     },
-    // Two-third spans
     {
       label: "Left two-thirds",
       snap: "left-two-thirds",
@@ -210,7 +246,6 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
       snap: "right-two-thirds",
       grid: "col-span-2 col-start-2 row-start-3",
     },
-    // Maximize
     { label: "Maximize", snap: "maximized", grid: "col-span-3 row-start-4" },
   ];
 

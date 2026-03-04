@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 export type WindowId = "conversations" | "notifications" | "settings";
+
 export type SnapPosition =
   | "left-third"
   | "center-third"
@@ -24,6 +25,8 @@ export interface AppWindow {
   isCollapsed: boolean;
   position: { x: number; y: number };
   size: { width: number; height: number };
+  preSnapPosition: { x: number; y: number } | null;
+  preSnapSize: { width: number; height: number } | null;
   zIndex: number;
   snapPosition: SnapPosition;
 }
@@ -37,6 +40,8 @@ const DEFAULT_WINDOWS: Record<WindowId, AppWindow> = {
     isCollapsed: false,
     position: { x: 80, y: 60 },
     size: { width: 320, height: 500 },
+    preSnapPosition: null,
+    preSnapSize: null,
     zIndex: 10,
     snapPosition: null,
   },
@@ -48,6 +53,8 @@ const DEFAULT_WINDOWS: Record<WindowId, AppWindow> = {
     isCollapsed: false,
     position: { x: 160, y: 100 },
     size: { width: 300, height: 420 },
+    preSnapPosition: null,
+    preSnapSize: null,
     zIndex: 10,
     snapPosition: null,
   },
@@ -59,6 +66,8 @@ const DEFAULT_WINDOWS: Record<WindowId, AppWindow> = {
     isCollapsed: false,
     position: { x: 240, y: 140 },
     size: { width: 480, height: 520 },
+    preSnapPosition: null,
+    preSnapSize: null,
     zIndex: 10,
     snapPosition: null,
   },
@@ -73,6 +82,7 @@ interface WindowStore {
   minimizeWindow: (id: WindowId) => void;
   collapseWindow: (id: WindowId) => void;
   focusWindow: (id: WindowId) => void;
+  clearSnap: (id: WindowId) => void;
   updatePosition: (id: WindowId, position: { x: number; y: number }) => void;
   updateSize: (id: WindowId, size: { width: number; height: number }) => void;
   snapWindow: (id: WindowId, snap: SnapPosition) => void;
@@ -112,6 +122,8 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
           isOpen: false,
           snapPosition: null,
           isCollapsed: false,
+          preSnapPosition: null,
+          preSnapSize: null,
         },
       },
     })),
@@ -150,11 +162,30 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     });
   },
 
+  clearSnap: (id: WindowId) =>
+    set((state) => ({
+      windows: {
+        ...state.windows,
+        [id]: {
+          ...state.windows[id],
+          snapPosition: null,
+          preSnapPosition: null,
+          preSnapSize: null,
+        },
+      },
+    })),
+
   updatePosition: (id, position) =>
     set((state) => ({
       windows: {
         ...state.windows,
-        [id]: { ...state.windows[id], position, snapPosition: null },
+        [id]: {
+          ...state.windows[id],
+          position,
+          snapPosition: null,
+          preSnapPosition: null,
+          preSnapSize: null,
+        },
       },
     })),
 
@@ -172,12 +203,12 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
     if (!workspace) return;
     const { offsetWidth: W, offsetHeight: H } = workspace;
     const padding = 8;
+    const win = state.windows[id];
 
     const snapLayouts: Record<
       NonNullable<SnapPosition>,
       { x: number; y: number; width: number; height: number }
     > = {
-      // Full height thirds
       "left-third": {
         x: padding,
         y: padding,
@@ -196,8 +227,6 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         width: W / 3 - padding * 1.5,
         height: H - padding * 2,
       },
-
-      // Top row
       "top-left": {
         x: padding,
         y: padding,
@@ -216,8 +245,6 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         width: W / 3 - padding * 1.5,
         height: H / 2 - padding * 1.5,
       },
-
-      // Bottom row
       "bottom-left": {
         x: padding,
         y: H / 2 + padding / 2,
@@ -236,8 +263,6 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         width: W / 3 - padding * 1.5,
         height: H / 2 - padding * 1.5,
       },
-
-      // Two-third spans
       "left-two-thirds": {
         x: padding,
         y: padding,
@@ -250,8 +275,6 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
         width: (W / 3) * 2 - padding * 1.5,
         height: H - padding * 2,
       },
-
-      // Maximized
       maximized: {
         x: padding,
         y: padding,
@@ -262,12 +285,17 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
 
     if (!snap) return;
     const layout = snapLayouts[snap];
+
     set({
       windows: {
         ...state.windows,
         [id]: {
-          ...state.windows[id],
+          ...win,
           snapPosition: snap,
+          preSnapPosition: win.snapPosition
+            ? win.preSnapPosition
+            : win.position,
+          preSnapSize: win.snapPosition ? win.preSnapSize : win.size,
           position: { x: layout.x, y: layout.y },
           size: { width: layout.width, height: layout.height },
         },
