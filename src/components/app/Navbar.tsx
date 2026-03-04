@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useUIStore } from "@/stores/uiStore";
+import { useWindowStore, type WindowId } from "@/stores/windowStore";
 
 type Tab = "conversations" | "notifications" | "settings";
 
@@ -68,6 +68,13 @@ function SettingsIcon({ active }: { active: boolean }) {
   );
 }
 
+const tabs: { id: Tab; icon: React.FC<{ active: boolean }>; label: string }[] =
+  [
+    { id: "conversations", icon: ConversationsIcon, label: "Conversations" },
+    { id: "notifications", icon: NotificationsIcon, label: "Notifications" },
+    { id: "settings", icon: SettingsIcon, label: "Settings" },
+  ];
+
 export default function Navbar() {
   const [profile, setProfile] = useState<{
     username: string;
@@ -75,8 +82,7 @@ export default function Navbar() {
   } | null>(null);
   const router = useRouter();
   const supabase = createClient();
-  const { activePanel, activeModal, setActivePanel, setActiveModal, closeAll } =
-    useUIStore();
+  const { windows, openWindow, closeWindow } = useWindowStore();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -100,41 +106,17 @@ export default function Navbar() {
   };
 
   const handleTabClick = (tab: Tab) => {
-    if (tab === "conversations") {
-      closeAll();
-    } else if (tab === "notifications") {
-      setActiveModal(null);
-      setActivePanel(activePanel === "notifications" ? null : "notifications");
-    } else if (tab === "settings") {
-      setActivePanel(null);
-      setActiveModal(activeModal === "settings" ? null : "settings");
+    const win = windows[tab as WindowId];
+    if (win.isOpen) {
+      closeWindow(tab as WindowId);
+    } else {
+      openWindow(tab as WindowId);
     }
   };
 
-  const getActiveTab = (): Tab | null => {
-    if (activeModal === "settings") return "settings";
-    if (activePanel === "notifications") return "notifications";
-    return "conversations";
-  };
-
-  const activeTab = getActiveTab();
-
-  const tabs = [
-    {
-      id: "conversations" as Tab,
-      icon: ConversationsIcon,
-      label: "Conversations",
-    },
-    {
-      id: "notifications" as Tab,
-      icon: NotificationsIcon,
-      label: "Notifications",
-    },
-    { id: "settings" as Tab, icon: SettingsIcon, label: "Settings" },
-  ];
-
   return (
     <nav className="flex flex-col items-center justify-between w-16 h-screen py-4 bg-zinc-200 dark:bg-zinc-800 border-r border-zinc-300 dark:border-zinc-700 shrink-0">
+      {/* Top section — avatar + divider + tabs */}
       <div className="flex flex-col items-center w-full gap-3">
         {/* Avatar */}
         <div className="w-9 h-9 rounded-full overflow-hidden bg-indigo-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-zinc-300 dark:ring-zinc-600 shrink-0">
@@ -155,7 +137,7 @@ export default function Navbar() {
         {/* Tabs */}
         <div className="flex flex-col items-center gap-1 w-full px-2">
           {tabs.map(({ id, icon: Icon, label }) => {
-            const isActive = activeTab === id;
+            const isActive = windows[id as WindowId].isOpen;
             return (
               <button
                 key={id}
@@ -174,7 +156,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Sign out */}
+      {/* Bottom section — sign out */}
       <div className="flex flex-col items-center w-full px-2">
         <button
           onClick={handleSignOut}
