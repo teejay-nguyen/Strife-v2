@@ -136,7 +136,7 @@ export default function SignupForm() {
           <input
             id="inviteCode"
             type="text"
-            placeholder="ALPHA-XXXXXX"
+            placeholder=" "
             value={inviteCode}
             onChange={(e) => setInviteCode(e.target.value)}
             required
@@ -283,7 +283,11 @@ export default function SignupForm() {
         className="animate-fade-slide-up"
         style={{ animationDelay: "900ms" }}
       >
-        <GoogleSignInButton label="Sign up with Google" />
+        <GoogleSignInButton
+          label="Sign up with Google"
+          inviteCode={inviteCode}
+          onInvalidCode={(msg) => setError(msg)}
+        />
       </div>
 
       <p

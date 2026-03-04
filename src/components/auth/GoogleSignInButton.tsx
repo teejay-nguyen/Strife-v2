@@ -1,14 +1,49 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
+import { setCookie } from "cookies-next";
+
+interface Props {
+  label?: string;
+  inviteCode?: string;
+  onInvalidCode?: (message: string) => void;
+}
 
 export default function GoogleSignInButton({
   label = "Continue with Google",
-}: {
-  label?: string;
-}) {
+  inviteCode,
+  onInvalidCode,
+}: Props) {
   const supabase = createClient();
 
   const handleGoogleSignIn = async () => {
+    if (inviteCode !== undefined) {
+      if (!inviteCode.trim()) {
+        onInvalidCode?.("Please enter an invite code.");
+        return;
+      }
+
+      const { data: codeData, error: codeError } = await supabase
+        .from("invite_codes")
+        .select("id, is_active, used_by")
+        .eq("code", inviteCode.trim().toUpperCase())
+        .single();
+
+      if (codeError || !codeData) {
+        onInvalidCode?.("Invalid invite code. Please try again.");
+        return;
+      }
+
+      if (!codeData.is_active || codeData.used_by) {
+        onInvalidCode?.("This invite code has already been used.");
+        return;
+      }
+
+      setCookie("pending_invite_code", inviteCode.trim().toUpperCase(), {
+        maxAge: 60 * 15, // 15 minutes
+        path: "/",
+      });
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
