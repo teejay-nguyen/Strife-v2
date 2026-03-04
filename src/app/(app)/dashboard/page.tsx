@@ -11,15 +11,4 @@ export default function dashboardPage() {
     await supabase.auth.signOut();
     router.push("/login");
   };
-
-  return (
-    <div>
-      <button
-        onClick={handleSignOut}
-        className="bg-red-600 text-white px-4 py-2 rounded"
-      >
-        Sign Out
-      </button>
-    </div>
-  );
 }

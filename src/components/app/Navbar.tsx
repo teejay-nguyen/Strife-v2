@@ -1,0 +1,197 @@
+"use client";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+
+type Tab = "conversations" | "notifications" | "settings";
+
+function ConversationsIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={active ? 2.5 : 1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+      />
+    </svg>
+  );
+}
+
+function NotificationsIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={active ? 2.5 : 1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+      />
+    </svg>
+  );
+}
+
+function SettingsIcon({ active }: { active: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-5 h-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={active ? 2.5 : 1.5}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  );
+}
+
+const tabs = [
+  {
+    id: "conversations" as Tab,
+    icon: ConversationsIcon,
+    label: "Conversations",
+    href: "/messages",
+  },
+  {
+    id: "notifications" as Tab,
+    icon: NotificationsIcon,
+    label: "Notifications",
+    href: "/messages/notifications",
+  },
+  {
+    id: "settings" as Tab,
+    icon: SettingsIcon,
+    label: "Settings",
+    href: "/messages/settings",
+  },
+];
+
+export default function Navbar() {
+  const [profile, setProfile] = useState<{
+    username: string;
+    avatar_url: string | null;
+  } | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("username, avatar_url")
+        .eq("id", user.id)
+        .single();
+      if (data) setProfile(data);
+    };
+    fetchProfile();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  const getActiveTab = (): Tab => {
+    if (pathname.includes("notifications")) return "notifications";
+    if (pathname.includes("settings")) return "settings";
+    return "conversations";
+  };
+
+  const activeTab = getActiveTab();
+
+  return (
+    <nav className="flex flex-col items-center justify-between w-16 h-screen py-4 bg-zinc-200 dark:bg-zinc-800 border-r border-zinc-300 dark:border-zinc-700 shrink-0">
+      {/* Top section - avatar + divider + tabs */}
+      <div className="flex flex-col items-center w-full gap-3">
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full overflow-hidden bg-indigo-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-zinc-300 dark:ring-zinc-600 shrink-0">
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt={profile.username}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span>{profile?.username?.[0]?.toUpperCase() ?? "?"}</span>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="w-8 h-px bg-zinc-300 dark:bg-zinc-600" />
+
+        {/* Tabs */}
+        <div className="flex flex-col items-center gap-1 w-full px-2">
+          {tabs.map(({ id, icon: Icon, label, href }) => {
+            const isActive = activeTab === id;
+            return (
+              <Link
+                key={id}
+                href={href}
+                title={label}
+                className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-150 ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                    : "text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                <Icon active={isActive} />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Bottom section - sign out */}
+      <div className="flex flex-col items-center w-full px-2">
+        <button
+          onClick={handleSignOut}
+          title="Sign out"
+          className="flex items-center justify-center w-10 h-10 rounded-xl text-zinc-500 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700 hover:text-red-500 dark:hover:text-red-400 transition-all"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+        </button>
+      </div>
+    </nav>
+  );
+}
