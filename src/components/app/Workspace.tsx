@@ -4,6 +4,7 @@ import WindowFrame from "./WindowFrame";
 import ConversationsWindow from "./windows/ConversationsWindow";
 import NotificationsWindow from "./windows/NotificationsWindow";
 import SettingsWindow from "./windows/SettingsWindow";
+import ProfileWindow from "./windows/ProfileWindow";
 
 export default function Workspace() {
   const { windows } = useWindowStore();
@@ -11,7 +12,7 @@ export default function Workspace() {
   return (
     <div
       id="workspace"
-      className="relative w-full h-full overflow-hidden bg-zinc-100 dark:bg-zinc-900"
+      className="relative w-full h-full overflow-hidden bg-zinc-100 dark:bg-zinc-900 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"
     >
       {/* Empty state */}
       {!Object.values(windows).some((w) => w.isOpen) && (
@@ -46,6 +47,10 @@ export default function Workspace() {
 
       <WindowFrame window={windows.settings}>
         <SettingsWindow />
+      </WindowFrame>
+
+      <WindowFrame window={windows.profile}>
+        <ProfileWindow />
       </WindowFrame>
     </div>
   );

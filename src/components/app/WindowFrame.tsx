@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Rnd } from "react-rnd";
 import type { DraggableEvent } from "react-draggable";
 import {
@@ -8,7 +8,7 @@ import {
   type SnapPosition,
 } from "@/stores/windowStore";
 
-const SNAP_THRESHOLD = 80;
+const SNAP_THRESHOLD = 40;
 
 interface Props {
   window: AppWindow;
@@ -29,12 +29,13 @@ export default function WindowFrame({ window: win, children }: Props) {
   const [rndKey, setRndKey] = useState(0);
   const isDragging = useRef(false);
   const windowRef = useRef<HTMLDivElement>(null);
+  const isResizing = useRef(false);
 
   useEffect(() => {
-    if (!isDragging.current) {
+    if (!isDragging.current && !isResizing.current) {
       setRndKey((k) => k + 1);
     }
-  }, [win.size.width, win.size.height, win.snapPosition]);
+  }, [win.snapPosition]);
 
   if (!win.isOpen || win.isMinimized) return null;
 
@@ -117,7 +118,9 @@ export default function WindowFrame({ window: win, children }: Props) {
         onDragStart={handleDragStart}
         onDrag={handleDrag}
         onDragStop={handleDragStop}
+        onResizeStart={() => (isResizing.current = true)}
         onResizeStop={(_e, _dir, _ref, _delta, position) => {
+          isResizing.current = false;
           updateSize(win.id, {
             width: parseInt(_ref.style.width),
             height: parseInt(_ref.style.height),

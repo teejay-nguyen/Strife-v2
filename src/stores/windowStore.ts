@@ -1,6 +1,10 @@
 import { create } from "zustand";
 
-export type WindowId = "conversations" | "notifications" | "settings";
+export type WindowId =
+  | "conversations"
+  | "notifications"
+  | "settings"
+  | "profile";
 
 export type SnapPosition =
   | "left-third"
@@ -66,6 +70,19 @@ const DEFAULT_WINDOWS: Record<WindowId, AppWindow> = {
     isCollapsed: false,
     position: { x: 240, y: 140 },
     size: { width: 480, height: 520 },
+    preSnapPosition: null,
+    preSnapSize: null,
+    zIndex: 10,
+    snapPosition: null,
+  },
+  profile: {
+    id: "profile",
+    title: "Profile",
+    isOpen: false,
+    isMinimized: false,
+    isCollapsed: false,
+    position: { x: 100, y: 80 },
+    size: { width: 340, height: 480 },
     preSnapPosition: null,
     preSnapSize: null,
     zIndex: 10,

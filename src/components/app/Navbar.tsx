@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useWindowStore, type WindowId } from "@/stores/windowStore";
+import Avatar from "../ui/Avatar";
 
 type Tab = "conversations" | "notifications" | "settings";
 
@@ -79,6 +80,8 @@ export default function Navbar() {
   const [profile, setProfile] = useState<{
     username: string;
     avatar_url: string | null;
+    avatar_color: string | null;
+    status: string | null;
   } | null>(null);
   const router = useRouter();
   const supabase = createClient();
@@ -92,10 +95,30 @@ export default function Navbar() {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
-        .select("username, avatar_url")
+        .select("username, avatar_url, avatar_color, status")
         .eq("id", user.id)
         .single();
       if (data) setProfile(data);
+
+      const channel = supabase
+        .channel("profile-changes")
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${user.id}`,
+          },
+          (payload) => {
+            setProfile((prev) => (prev ? { ...prev, ...payload.new } : prev));
+          },
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
     fetchProfile();
   }, []);
@@ -119,17 +142,39 @@ export default function Navbar() {
       {/* Top section — avatar + divider + tabs */}
       <div className="flex flex-col items-center w-full gap-3">
         {/* Avatar */}
-        <div className="w-9 h-9 rounded-full overflow-hidden bg-indigo-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-zinc-300 dark:ring-zinc-600 shrink-0">
-          {profile?.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={profile.username}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span>{profile?.username?.[0]?.toUpperCase() ?? "?"}</span>
-          )}
-        </div>
+        <button
+          onClick={() =>
+            windows.profile.isOpen
+              ? closeWindow("profile")
+              : openWindow("profile")
+          }
+          className={`relative rounded-full transition-all ${
+            windows.profile.isOpen
+              ? "ring-2 ring-indigo-500"
+              : "hover:ring-2 hover:ring-indigo-400"
+          }`}
+        >
+          <Avatar
+            username={profile?.username ?? "?"}
+            avatarUrl={profile?.avatar_url}
+            avatarColor={profile?.avatar_color}
+            size={36}
+          />
+          {/* Status dot */}
+          <span
+            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-zinc-200 dark:border-zinc-800 ${
+              profile?.status === "online"
+                ? "bg-green-500"
+                : profile?.status === "away"
+                  ? "bg-yellow-400"
+                  : profile?.status === "dnd"
+                    ? "bg-red-500"
+                    : profile?.status === "invisible"
+                      ? "bg-zinc-400"
+                      : "bg-green-500"
+            }`}
+          />
+        </button>
 
         {/* Divider */}
         <div className="w-8 h-px bg-zinc-300 dark:bg-zinc-600" />
