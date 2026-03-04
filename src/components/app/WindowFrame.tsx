@@ -196,58 +196,72 @@ function SnapOverlay({ snap }: { snap: SnapPosition }) {
 
 function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const { snapWindow } = useWindowStore();
 
-  const layouts: { label: string; snap: SnapPosition; grid: string }[] = [
-    {
-      label: "Left third",
-      snap: "left-third",
-      grid: "col-start-1 row-start-1 row-span-2",
-    },
-    {
-      label: "Center third",
-      snap: "center-third",
-      grid: "col-start-2 row-start-1 row-span-2",
-    },
-    {
-      label: "Right third",
-      snap: "right-third",
-      grid: "col-start-3 row-start-1 row-span-2",
-    },
-    { label: "Top left", snap: "top-left", grid: "col-start-1 row-start-1" },
-    {
-      label: "Top center",
-      snap: "top-center",
-      grid: "col-start-2 row-start-1",
-    },
-    { label: "Top right", snap: "top-right", grid: "col-start-3 row-start-1" },
-    {
-      label: "Bottom left",
-      snap: "bottom-left",
-      grid: "col-start-1 row-start-2",
-    },
-    {
-      label: "Bottom center",
-      snap: "bottom-center",
-      grid: "col-start-2 row-start-2",
-    },
-    {
-      label: "Bottom right",
-      snap: "bottom-right",
-      grid: "col-start-3 row-start-2",
-    },
-    {
-      label: "Left two-thirds",
-      snap: "left-two-thirds",
-      grid: "col-span-2 col-start-1 row-start-3",
-    },
-    {
-      label: "Right two-thirds",
-      snap: "right-two-thirds",
-      grid: "col-span-2 col-start-2 row-start-3",
-    },
-    { label: "Maximize", snap: "maximized", grid: "col-span-3 row-start-4" },
-  ];
+  const cellCount = 6; // 3 cols x 2 rows
+
+  const toggleCell = (index: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  // Map selection to snap position
+  const getSnapFromSelection = (sel: Set<number>): SnapPosition | null => {
+    const s = Array.from(sel).sort((a, b) => a - b);
+    const key = s.join(",");
+
+    const map: Record<string, SnapPosition> = {
+      // Full height thirds
+      "0,3": "left-third",
+      "1,4": "center-third",
+      "2,5": "right-third",
+      // Top row
+      "0": "top-left",
+      "1": "top-center",
+      "2": "top-right",
+      // Bottom row
+      "3": "bottom-left",
+      "4": "bottom-center",
+      "5": "bottom-right",
+      // Two thirds
+      "0,1,3,4": "left-two-thirds",
+      "1,2,4,5": "right-two-thirds",
+      // Maximize
+      "0,1,2,3,4,5": "maximized",
+      // Top two thirds
+      "0,1": "top-left", // fallback — could extend SnapPosition later
+      "1,2": "top-right",
+    };
+
+    return map[key] ?? null;
+  };
+
+  const snapResult = getSnapFromSelection(selected);
+
+  const handleApply = () => {
+    if (snapResult) {
+      snapWindow(windowId, snapResult);
+      setSelected(new Set());
+      setOpen(false);
+    }
+  };
+
+  const handleClose = () => {
+    setSelected(new Set());
+    setOpen(false);
+  };
+
+  // Visual label for current selection
+  const snapLabel = snapResult
+    ? snapResult.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : selected.size > 0
+      ? "Invalid selection"
+      : "Select cells";
 
   return (
     <div className="relative flex items-center">
@@ -260,29 +274,52 @@ function SnapMenu({ windowId }: { windowId: AppWindow["id"] }) {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-50" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-50" onClick={handleClose} />
           <div
             onMouseDown={(e) => e.stopPropagation()}
-            className="absolute top-5 right-0 z-50 p-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl w-44"
+            className="absolute top-5 right-0 z-50 p-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-xl w-48"
           >
             <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-2 px-1">
               Snap to
             </p>
-            <div className="grid grid-cols-3 grid-rows-4 gap-1">
-              {layouts.map(({ label, snap, grid }) => (
-                <button
-                  key={snap}
-                  title={label}
-                  onClick={() => {
-                    snapWindow(windowId, snap);
-                    setOpen(false);
-                  }}
-                  className={`${grid} h-7 rounded bg-zinc-100 dark:bg-zinc-700 hover:bg-indigo-500 hover:text-white text-zinc-500 dark:text-zinc-400 transition-colors text-xs`}
-                >
-                  {snap === "maximized" ? "⛶" : ""}
-                </button>
-              ))}
+
+            {/* 3x2 grid */}
+            <div className="grid grid-cols-3 grid-rows-2 gap-1 mb-2">
+              {Array.from({ length: cellCount }).map((_, i) => {
+                const isSelected = selected.has(i);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => toggleCell(i)}
+                    className={`h-8 rounded transition-colors ${
+                      isSelected
+                        ? "bg-indigo-500 hover:bg-indigo-600"
+                        : "bg-zinc-100 dark:bg-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-600"
+                    }`}
+                  />
+                );
+              })}
             </div>
+
+            {/* Preview label */}
+            <p
+              className={`text-xs text-center mb-2 ${
+                snapResult
+                  ? "text-indigo-500 dark:text-indigo-400"
+                  : "text-zinc-400 dark:text-zinc-500"
+              }`}
+            >
+              {snapLabel}
+            </p>
+
+            {/* Apply button */}
+            <button
+              onClick={handleApply}
+              disabled={!snapResult}
+              className="w-full py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              Apply
+            </button>
           </div>
         </>
       )}
