@@ -96,6 +96,34 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
   openWindow: (id) => {
     const { topZIndex, windows } = get();
     const newZ = topZIndex + 1;
+    const workspace = document.getElementById("workspace");
+    const win = windows[id];
+
+    let position = win.position;
+    let size = win.size;
+
+    if (workspace) {
+      const { offsetWidth: W, offsetHeight: H } = workspace;
+      const padding = 20;
+
+      // Clamp size to workspace
+      const clampedWidth = Math.min(size.width, W - padding * 2);
+      const clampedHeight = Math.min(size.height, H - padding * 2);
+
+      // Clamp position so window is fully visible
+      const clampedX = Math.min(
+        Math.max(position.x, padding),
+        W - clampedWidth - padding,
+      );
+      const clampedY = Math.min(
+        Math.max(position.y, padding),
+        H - clampedHeight - padding,
+      );
+
+      position = { x: clampedX, y: clampedY };
+      size = { width: clampedWidth, height: clampedHeight };
+    }
+
     set({
       topZIndex: newZ,
       activeTab: id,
@@ -107,6 +135,8 @@ export const useWindowStore = create<WindowStore>((set, get) => ({
           isMinimized: false,
           isCollapsed: false,
           zIndex: newZ,
+          position,
+          size,
         },
       },
     });
