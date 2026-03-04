@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useUIStore } from "@/stores/uiStore";
 
 type Tab = "conversations" | "notifications" | "settings";
 
@@ -68,35 +68,15 @@ function SettingsIcon({ active }: { active: boolean }) {
   );
 }
 
-const tabs = [
-  {
-    id: "conversations" as Tab,
-    icon: ConversationsIcon,
-    label: "Conversations",
-    href: "/messages",
-  },
-  {
-    id: "notifications" as Tab,
-    icon: NotificationsIcon,
-    label: "Notifications",
-    href: "/messages/notifications",
-  },
-  {
-    id: "settings" as Tab,
-    icon: SettingsIcon,
-    label: "Settings",
-    href: "/messages/settings",
-  },
-];
-
 export default function Navbar() {
   const [profile, setProfile] = useState<{
     username: string;
     avatar_url: string | null;
   } | null>(null);
   const router = useRouter();
-  const pathname = usePathname();
   const supabase = createClient();
+  const { activePanel, activeModal, setActivePanel, setActiveModal, closeAll } =
+    useUIStore();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -119,17 +99,42 @@ export default function Navbar() {
     router.push("/login");
   };
 
-  const getActiveTab = (): Tab => {
-    if (pathname.includes("notifications")) return "notifications";
-    if (pathname.includes("settings")) return "settings";
+  const handleTabClick = (tab: Tab) => {
+    if (tab === "conversations") {
+      closeAll();
+    } else if (tab === "notifications") {
+      setActiveModal(null);
+      setActivePanel(activePanel === "notifications" ? null : "notifications");
+    } else if (tab === "settings") {
+      setActivePanel(null);
+      setActiveModal(activeModal === "settings" ? null : "settings");
+    }
+  };
+
+  const getActiveTab = (): Tab | null => {
+    if (activeModal === "settings") return "settings";
+    if (activePanel === "notifications") return "notifications";
     return "conversations";
   };
 
   const activeTab = getActiveTab();
 
+  const tabs = [
+    {
+      id: "conversations" as Tab,
+      icon: ConversationsIcon,
+      label: "Conversations",
+    },
+    {
+      id: "notifications" as Tab,
+      icon: NotificationsIcon,
+      label: "Notifications",
+    },
+    { id: "settings" as Tab, icon: SettingsIcon, label: "Settings" },
+  ];
+
   return (
     <nav className="flex flex-col items-center justify-between w-16 h-screen py-4 bg-zinc-200 dark:bg-zinc-800 border-r border-zinc-300 dark:border-zinc-700 shrink-0">
-      {/* Top section - avatar + divider + tabs */}
       <div className="flex flex-col items-center w-full gap-3">
         {/* Avatar */}
         <div className="w-9 h-9 rounded-full overflow-hidden bg-indigo-600 flex items-center justify-center text-white text-sm font-bold ring-2 ring-zinc-300 dark:ring-zinc-600 shrink-0">
@@ -149,12 +154,12 @@ export default function Navbar() {
 
         {/* Tabs */}
         <div className="flex flex-col items-center gap-1 w-full px-2">
-          {tabs.map(({ id, icon: Icon, label, href }) => {
+          {tabs.map(({ id, icon: Icon, label }) => {
             const isActive = activeTab === id;
             return (
-              <Link
+              <button
                 key={id}
-                href={href}
+                onClick={() => handleTabClick(id)}
                 title={label}
                 className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-150 ${
                   isActive
@@ -163,13 +168,13 @@ export default function Navbar() {
                 }`}
               >
                 <Icon active={isActive} />
-              </Link>
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Bottom section - sign out */}
+      {/* Sign out */}
       <div className="flex flex-col items-center w-full px-2">
         <button
           onClick={handleSignOut}
