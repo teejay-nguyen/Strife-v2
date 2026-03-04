@@ -26,6 +26,7 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -54,19 +55,52 @@ export default function SignupForm() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    // Validate invite code
+    const { data: codeData, error: codeError } = await supabase
+      .from("invite_codes")
+      .select("id, is_active, used_by")
+      .eq("code", inviteCode.trim().toUpperCase())
+      .single();
+
+    if (codeError || !codeData) {
+      setError("Invalid invite code.");
+      setLoading(false);
+      return;
+    }
+
+    if (!codeData.is_active || codeData.used_by) {
+      setError("This invite code has already been used.");
+      setLoading(false);
+      return;
+    }
+
+    // Create account
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { username } },
     });
 
-    if (error) {
-      setError(error.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
-    } else {
-      router.push("/messages");
-      router.refresh();
+      return;
     }
+
+    // Mark invite code as used
+    if (data.user) {
+      await supabase
+        .from("invite_codes")
+        .update({
+          used_by: data.user.id,
+          used_at: new Date().toISOString(),
+          is_active: false,
+        })
+        .eq("code", inviteCode.trim().toUpperCase());
+    }
+
+    router.push("/messages");
+    router.refresh();
   };
 
   return (
@@ -90,6 +124,24 @@ export default function SignupForm() {
         <div className="animate-fade-slide-up delay-200 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+            htmlFor="inviteCode"
+          >
+            Invite Code
+          </label>
+          <input
+            id="inviteCode"
+            type="text"
+            placeholder="ALPHA-XXXXXX"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            required
+            className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase tracking-widest"
+          />
+        </div>
+
+        <div className="animate-fade-slide-up delay-300 flex flex-col gap-1.5">
+          <label
+            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="username"
           >
             Username
@@ -105,7 +157,7 @@ export default function SignupForm() {
           />
         </div>
 
-        <div className="animate-fade-slide-up delay-300 flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-400 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="email"
@@ -123,7 +175,7 @@ export default function SignupForm() {
           />
         </div>
 
-        <div className="animate-fade-slide-up delay-400 flex flex-col gap-1.5">
+        <div className="animate-fade-slide-up delay-500 flex flex-col gap-1.5">
           <label
             className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
             htmlFor="password"
@@ -142,6 +194,11 @@ export default function SignupForm() {
               required
               className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
+            {passwordValid && (
+              <span className="absolute right-8 top-1/2 -translate-y-1/2 text-green-500 dark:text-green-400 text-base">
+                ✓
+              </span>
+            )}
             <PasswordToggleButton
               visible={passwordVis.visible}
               onToggle={passwordVis.toggle}
@@ -165,31 +222,39 @@ export default function SignupForm() {
           )}
         </div>
 
-        <div className="animate-fade-slide-up delay-500 flex flex-col gap-1.5">
-          <label
-            className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            htmlFor="confirmPassword"
-          >
-            Confirm Password
-          </label>
-          <div className="relative">
-            <input
-              id="confirmPassword"
-              type={confirmPasswordVis.visible ? "text" : "password"}
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
-            <PasswordToggleButton
-              visible={confirmPasswordVis.visible}
-              onToggle={confirmPasswordVis.toggle}
-            />
+        <div
+          className="animate-fade-slide-up"
+          style={{ animationDelay: "600ms" }}
+        >
+          <div className="flex flex-col gap-1.5">
+            <label
+              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              htmlFor="confirmPassword"
+            >
+              Confirm Password
+            </label>
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={confirmPasswordVis.visible ? "text" : "password"}
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-500 rounded-lg px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              <PasswordToggleButton
+                visible={confirmPasswordVis.visible}
+                onToggle={confirmPasswordVis.toggle}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="animate-fade-slide-up delay-600">
+        <div
+          className="animate-fade-slide-up"
+          style={{ animationDelay: "700ms" }}
+        >
           <button
             type="submit"
             disabled={loading}
@@ -200,7 +265,10 @@ export default function SignupForm() {
         </div>
       </form>
 
-      <div className="animate-fade-slide-up delay-700 flex items-center gap-3">
+      <div
+        className="animate-fade-slide-up flex items-center gap-3"
+        style={{ animationDelay: "800ms" }}
+      >
         <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
         <span className="text-zinc-400 dark:text-zinc-500 text-xs">or</span>
         <div className="flex-1 h-px bg-zinc-300 dark:bg-zinc-700" />
@@ -208,14 +276,14 @@ export default function SignupForm() {
 
       <div
         className="animate-fade-slide-up"
-        style={{ animationDelay: "800ms" }}
+        style={{ animationDelay: "900ms" }}
       >
         <GoogleSignInButton label="Sign up with Google" />
       </div>
 
       <p
         className="animate-fade-slide-up text-zinc-500 dark:text-zinc-400 text-sm text-center"
-        style={{ animationDelay: "900ms" }}
+        style={{ animationDelay: "1000ms" }}
       >
         Already have an account?{" "}
         <Link
